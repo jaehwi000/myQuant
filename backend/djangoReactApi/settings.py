@@ -11,16 +11,26 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
-
+import json
+ 
+from django.core.exceptions import ImproperlyConfigured
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
+with open("secrets.json") as f:
+    secrets = json.loads(f.read())
+# Keep secret keys in secrets.json
+def get_secret(setting, secrets=secrets):
+    try:
+        return secrets[setting]
+    except KeyError:
+        error_msg = "Set the {0} environment variable".format(setting)
+        raise ImproperlyConfigured(error_msg)
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'lt@4pffpzjk2e7$-u3cz4uz@wz=miuu(04!5y4g1m(!_8e)9n7'
+SECRET_KEY = get_secret("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -79,8 +89,12 @@ WSGI_APPLICATION = 'djangoReactApi.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'mydb',
+        'USER': get_secret("USER"),
+        'PASSWORD': get_secret("PASSWORD"),
+        'HOST': get_secret("HOST"),
+        'PORT':'3306'
     }
 }
 
@@ -133,5 +147,9 @@ REST_FRAMEWORK = {
 }
 
 CORS_ORIGIN_WHITELIST = (
+    '127.0.0.1:3000/'
     'localhost:3000/'
 )
+
+
+ 
